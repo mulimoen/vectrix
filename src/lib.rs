@@ -116,6 +116,7 @@
 //! ```
 
 #![no_std]
+#![feature(array_value_iter)]
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -125,6 +126,7 @@ mod ops;
 mod prelude;
 pub mod traits;
 
+use core::array;
 use core::fmt;
 use core::iter;
 use core::slice;
@@ -255,87 +257,13 @@ impl_from_tuple! {
 // Iterators
 ////////////////////////////////////////////////////////////////////////////////
 
-/// An iterator that moves out of a vector.
-///
-/// This `struct` is created by the `.into_iter()` method on [`Vector`]
-/// (provided by the [`IntoIterator`] trait).
-///
-/// # Examples
-///
-/// ```
-/// # use vectrs::{IntoIter, Vector};
-/// #
-/// let v = Vector::from([0, 1, 2]);
-/// let iter: IntoIter<_, 3> = v.into_iter();
-/// ```
-#[derive(Debug)]
-pub struct IntoIter<T, const N: usize> {
-    left: usize,
-    right: usize,
-    vector: Vector<T, N>,
-}
-
-impl<T, const N: usize> IntoIter<T, N> {
-    #[inline]
-    fn new(vector: Vector<T, N>) -> Self {
-        Self {
-            left: 0,
-            right: vector.arr.len(),
-            vector,
-        }
-    }
-}
-
-impl<T: Base, const N: usize> Iterator for IntoIter<T, N> {
+impl<T, const N: usize> IntoIterator for Vector<T, N> {
     type Item = T;
-
-    #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.left == self.right {
-            None
-        } else {
-            let next = unsafe { self.vector.arr.get_unchecked(self.left) };
-            self.left += 1;
-            Some(*next)
-        }
-    }
-
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.right - self.left;
-        (remaining, Some(remaining))
-    }
-
-    #[inline]
-    fn count(self) -> usize {
-        self.right - self.left
-    }
-}
-
-impl<T: Base, const N: usize> DoubleEndedIterator for IntoIter<T, N> {
-    #[inline]
-    fn next_back(&mut self) -> Option<Self::Item> {
-        if self.left == self.right {
-            None
-        } else {
-            self.right -= 1;
-            let next = unsafe { self.vector.arr.get_unchecked(self.right) };
-            Some(*next)
-        }
-    }
-}
-
-impl<T: Base, const N: usize> ExactSizeIterator for IntoIter<T, N> {}
-
-impl<T: Base, const N: usize> iter::FusedIterator for IntoIter<T, N> {}
-
-impl<T: Base, const N: usize> IntoIterator for Vector<T, N> {
-    type Item = T;
-    type IntoIter = IntoIter<T, N>;
+    type IntoIter = array::IntoIter<T, N>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter::new(self)
+        array::IntoIter::new(self.arr)
     }
 }
 
