@@ -4,7 +4,11 @@ use core::ops::Range;
 
 use crate::prelude::*;
 
-/// An iterator that moves out of a matrix.
+////////////////////////////////////////////////////////////////////////////////
+// Element iteration
+////////////////////////////////////////////////////////////////////////////////
+
+/// An iterator over the elements in a matrix.
 ///
 /// This `struct` is created by the `.into_iter()` method on [`Matrix`]
 /// (provided by the [`IntoIterator`] trait).
@@ -115,6 +119,82 @@ where
         IntoIter::new(self)
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Column iteration
+////////////////////////////////////////////////////////////////////////////////
+
+/// An iterator over the columns in a matrix.
+#[derive(Clone)]
+pub struct IntoIterColumns<T, const M: usize, const N: usize> {
+    matrix: Matrix<T, M, N>,
+    alive: Range<usize>,
+}
+
+impl<T, const M: usize, const N: usize> IntoIterColumns<T, M, N> {
+    /// Creates a new iterator over the given matrix.
+    pub(crate) fn new(matrix: Matrix<T, M, N>) -> Self {
+        Self {
+            matrix,
+            alive: 0..N,
+        }
+    }
+}
+
+impl<T, const M: usize, const N: usize> Iterator for IntoIterColumns<T, M, N>
+where
+    T: Copy,
+{
+    type Item = ColumnVector<T, M>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Get the next index from the front.
+        self.alive.next().map(|idx| ColumnVector {
+            data: [self.matrix.data[idx]],
+        })
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
+    }
+
+    fn count(self) -> usize {
+        self.len()
+    }
+
+    fn last(mut self) -> Option<Self::Item> {
+        self.next_back()
+    }
+}
+
+impl<T, const M: usize, const N: usize> DoubleEndedIterator for IntoIterColumns<T, M, N>
+where
+    T: Copy,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        // Get the next index from the back.
+        self.alive.next_back().map(|idx| ColumnVector {
+            data: [self.matrix.data[idx]],
+        })
+    }
+}
+
+impl<T, const M: usize, const N: usize> ExactSizeIterator for IntoIterColumns<T, M, N>
+where
+    T: Copy,
+{
+    fn len(&self) -> usize {
+        // Will never underflow due to the invariant `alive.start <= alive.end`.
+        self.alive.end - self.alive.start
+    }
+}
+
+impl<T, const M: usize, const N: usize> FusedIterator for IntoIterColumns<T, M, N> where T: Copy {}
+
+////////////////////////////////////////////////////////////////////////////////
+// Matrix iteration
+////////////////////////////////////////////////////////////////////////////////
 
 impl<T, const M: usize, const N: usize> Sum<Matrix<T, M, N>> for Matrix<T, M, N>
 where

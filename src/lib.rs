@@ -186,7 +186,7 @@ use core::slice;
 #[cfg(feature = "macro")]
 pub use vectrix_macro as proc_macro;
 
-pub use crate::iter::IntoIter;
+pub use crate::iter::{IntoIter, IntoIterColumns};
 use crate::prelude::*;
 
 /// Represents a matrix with constant `M` rows and constant `N` columns.
@@ -310,6 +310,12 @@ impl<T, const M: usize, const N: usize> Matrix<T, M, N> {
     #[inline]
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, T> {
         self.as_mut_slice().iter_mut()
+    }
+
+    /// Returns an iterator over the columns in this matrix.
+    #[inline]
+    pub fn into_iter_columns(self) -> IntoIterColumns<T, M, N> {
+        IntoIterColumns::new(self)
     }
 
     /// Returns a matrix of the same size as self, with function `f` applied to
