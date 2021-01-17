@@ -179,7 +179,6 @@ mod prelude;
 pub mod traits;
 mod vector;
 
-use core::iter::Sum;
 use core::slice;
 
 #[doc(hidden)]
@@ -310,6 +309,26 @@ impl<T, const M: usize, const N: usize> Matrix<T, M, N> {
     #[inline]
     pub fn iter_mut(&mut self) -> slice::IterMut<'_, T> {
         self.as_mut_slice().iter_mut()
+    }
+
+    fn row(&self, i: usize) -> RowVector<T, N>
+    where
+        T: Copy + Default,
+    {
+        let mut vector = RowVector::default();
+        for j in 0..N {
+            vector[j] = self[(i, j)];
+        }
+        vector
+    }
+
+    fn column(&self, j: usize) -> Vector<T, M>
+    where
+        T: Copy,
+    {
+        Vector {
+            data: [self.data[j]],
+        }
     }
 
     /// Returns a matrix of the same size as self, with function `f` applied to

@@ -134,3 +134,17 @@ impl_vector! { 3: x, y, z }
 impl_vector! { 4: x, y, z, w }
 impl_vector! { 5: x, y, z, w, a }
 impl_vector! { 6: x, y, z, w, a, b }
+
+////////////////////////////////////////////////////////////////////////////////
+// General methods
+////////////////////////////////////////////////////////////////////////////////
+
+impl<T, const N: usize> RowVector<T, N> {
+    #[inline]
+    pub fn dot(&self, other: &Vector<T, N>) -> T
+    where
+        T: Copy + Mul<Output = T> + Sum,
+    {
+        (0..N).map(|idx| self[idx] * other[idx]).sum()
+    }
+}

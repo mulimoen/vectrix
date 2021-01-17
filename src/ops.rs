@@ -155,6 +155,36 @@ impl_op! { Add, add }
 impl_op! { Sub, sub }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Matrix * Matrix
+////////////////////////////////////////////////////////////////////////////////
+
+macro_rules! impl_mul {
+    ($lhs:ty, $rhs:ty) => {
+        impl<T, const M: usize, const N: usize> Mul<$rhs> for $lhs
+        where
+            T: Copy + Default + Mul<Output = T> + Sum,
+        {
+            type Output = Matrix<T, M, M>;
+
+            fn mul(self, other: $rhs) -> Self::Output {
+                let mut matrix = Matrix::default();
+                for i in 0..M {
+                    for j in 0..M {
+                        matrix[(i, j)] = self.row(i).dot(&other.column(j));
+                    }
+                }
+                matrix
+            }
+        }
+    };
+}
+
+impl_mul! { Matrix<T, M, N>, Matrix<T, N, M> }
+impl_mul! { Matrix<T, M, N>, &Matrix<T, N, M> }
+impl_mul! { &Matrix<T, M, N>, Matrix<T, N, M> }
+impl_mul! { &Matrix<T, M, N>, &Matrix<T, N, M> }
+
+////////////////////////////////////////////////////////////////////////////////
 // Matrix += Matrix
 ////////////////////////////////////////////////////////////////////////////////
 
